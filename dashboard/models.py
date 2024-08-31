@@ -10,8 +10,8 @@ class Car(models.Model):
     owner = models.ForeignKey('CarOwner', on_delete=models.CASCADE)
     color = models.CharField(max_length=50)
     model = models.CharField(max_length=50)
-    createdAt = models.DateTimeField(auto_now_add=True)
-    updatedAt = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 class CarOwner(models.Model):
     firstName = models.CharField(max_length=50)
@@ -20,8 +20,8 @@ class CarOwner(models.Model):
     phoneNumber = models.CharField(max_length=11, unique=True)
     dateOfBirth = models.DateField()
     career = models.CharField(max_length=50)
-    createdAt = models.DateTimeField(auto_now_add=True)
-    updatedAt = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 class Camera(models.Model):
     class CameraLevel(models.IntegerChoices):
@@ -31,11 +31,11 @@ class Camera(models.Model):
 
     location = models.CharField(max_length=100)
     description = models.CharField(max_length=100)
-    is_entry_camera = models.BooleanField()
+    is_entry_camera = models.BooleanField(default=False)
     level = models.IntegerField(choices=CameraLevel.choices,
                                 default=CameraLevel.GUEST)
-    createdAt = models.DateTimeField(auto_now_add=True)
-    updatedAt = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 class Permission(models.Model):
     class PermissionLevel(models.IntegerChoices):
@@ -49,5 +49,5 @@ class Permission(models.Model):
     isAllowed = models.BooleanField(default=True)
     level = models.IntegerField(choices=PermissionLevel.choices,
                                 default=PermissionLevel.GUEST)
-    createdAt = models.DateTimeField(auto_now_add=True)
-    updatedAt = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
