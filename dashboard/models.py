@@ -6,7 +6,7 @@ class CarEntry(models.Model):
     timestamp = models.DateTimeField()
 
 class Car(models.Model):
-    license_plate = models.CharField(max_length=8, unique=True, primary_key=True)
+    license_plate = models.CharField(max_length=10, unique=True, primary_key=True)
     owner = models.ForeignKey('CarOwner', on_delete=models.CASCADE)
     color = models.CharField(max_length=50)
     model = models.CharField(max_length=50)
