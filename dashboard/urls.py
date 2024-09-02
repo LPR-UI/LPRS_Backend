@@ -18,6 +18,14 @@ urlpatterns = [
     path('add-permission/', views.AddPermission.as_view(), name="add_permission"),
     path('add-camera/', views.AddCamera.as_view(), name="add_camera"),
 
+
+    # DELETE
+    path('delete-owner/<int:owner_id>/', views.DeleteOwner.as_view(), name="delete_owner"),
+    path('delete-car/<str:license_plate>/', views.DeleteCar.as_view(), name="delete_owner"),
+    path('delete-permission/<int:permission_id>/', views.DeletePermission.as_view(), name="delete_owner"),
+    path('delete-camera/<int:camera_id>/', views.DeleteCamera.as_view(), name="delete_owner"),
+
+
     # LISTS
     path('owners/', views.CarOwnerListView.as_view(), name='car_owner_list'),
     path('cars/', views.CarListView.as_view(), name='car_list'),

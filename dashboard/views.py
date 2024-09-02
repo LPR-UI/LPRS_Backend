@@ -17,6 +17,7 @@ from rest_framework.permissions import IsAuthenticated
 from .models import CarOwner, Car, Permission, Camera, CarEntry
 from django.utils import timezone
 from rest_framework import generics
+from django.db import IntegrityError
 from io import BytesIO
 import jdatetime
 
@@ -46,8 +47,8 @@ class Statistics(APIView):
 
         total_owners = CarOwner.objects.count()
         total_cars = Car.objects.count()
-        allowed_permissions = Permission.objects.filter(isAllowed=True, endDate__gte=start_of_today).count()
-        not_allowed_permissions = Permission.objects.filter(isAllowed=False).count()
+        allowed_permissions = Permission.objects.filter(is_allowed=True, end_date__gte=start_of_today).count()
+        not_allowed_permissions = Permission.objects.filter(is_allowed=False).count()
         total_cameras = Camera.objects.count()
         today_entries = CarEntry.objects.filter(timestamp__gte=start_of_today, timestamp__lt=end_of_today).count()
         total_entries = CarEntry.objects.count()
@@ -82,7 +83,6 @@ class Statistics(APIView):
         }
 
         return Response(data)
-    
 
 class GenerateReport(APIView):
     permission_classes = [IsAuthenticated]
@@ -141,9 +141,9 @@ class GenerateReport(APIView):
         p.drawString(100, y_position - 20, "Permissions:")
         y_position -= 40
         for permission in permissions:
-            status = "Allowed" if permission.isAllowed else "Not Allowed"
-            p.drawString(120, y_position, f"From: {jdatetime.datetime.fromgregorian(datetime=timezone.localtime(permission.startDate)).strftime('%Y-%m-%d %H:%M:%S')} "
-                                          f"To: {jdatetime.datetime.fromgregorian(datetime=timezone.localtime(permission.endDate)).strftime('%Y-%m-%d %H:%M:%S')} "
+            status = "Allowed" if permission.is_allowed else "Not Allowed"
+            p.drawString(120, y_position, f"From: {jdatetime.datetime.fromgregorian(datetime=timezone.localtime(permission.start_date)).strftime('%Y-%m-%d %H:%M:%S')} "
+                                          f"To: {jdatetime.datetime.fromgregorian(datetime=timezone.localtime(permission.end_date)).strftime('%Y-%m-%d %H:%M:%S')} "
                                           f"- Status: {status}")
             y_position -= 20
 
@@ -178,6 +178,27 @@ class AddOwner(APIView):
             status=status.HTTP_400_BAD_REQUEST
         )
 
+class DeleteOwner(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, owner_id):
+        # Check if owner_id is valid
+        if not isinstance(owner_id, int):
+            return Response({"error": "Invalid owner ID format."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            owner = CarOwner.objects.get(id=owner_id)
+            owner.delete()
+            return Response({
+                "message": "Owner deleted successfully.",
+            }, status=status.HTTP_200_OK)
+        except CarOwner.DoesNotExist:
+            return Response({"error": "Owner not found."}, status=status.HTTP_404_NOT_FOUND)
+        except IntegrityError:
+            return Response({"error": "Owner cannot be deleted because they are referenced by other records."}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": f"An unexpected error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 class CarOwnerListView(generics.ListAPIView):
     queryset = CarOwner.objects.all()
     serializer_class = ListAllCarOwnerSerializer
@@ -202,6 +223,22 @@ class AddCar(APIView):
             status=status.HTTP_400_BAD_REQUEST
         )
 
+class DeleteCar(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, license_plate):
+        try:
+            # Fetch the car using the license_plate
+            car = Car.objects.get(license_plate=license_plate)
+            car.delete()
+            return Response({"message": "Car deleted successfully."}, status=status.HTTP_200_OK)
+        except Car.DoesNotExist:
+            return Response({"error": "Car with this license plate not found."}, status=status.HTTP_404_NOT_FOUND)
+        except IntegrityError:
+            return Response({"error": "Car cannot be deleted because it is referenced by other records."}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": f"An unexpected error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 class CarListView(generics.ListAPIView):
     queryset = Car.objects.all()
     serializer_class = ListAllCarSerializer
@@ -224,7 +261,29 @@ class AddPermission(APIView):
             {"errors": serializer.errors, "message": "Failed to add permission. Please check the input data."}, 
             status=status.HTTP_400_BAD_REQUEST
         )
-    
+
+class DeletePermission(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, permission_id):
+        # Check if permission_id is valid
+        if not isinstance(permission_id, int):
+            return Response({"error": "Invalid permission ID format."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            permission = Permission.objects.get(id=permission_id)
+            permission.delete()
+            return Response({
+                "message": "Permission deleted successfully.",
+            }, status=status.HTTP_200_OK)
+        except Permission.DoesNotExist:
+            return Response({"error": "Permission not found."}, status=status.HTTP_404_NOT_FOUND)
+        except IntegrityError:
+            return Response({"error": "Permission cannot be deleted because it is referenced by other records."}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": f"An unexpected error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 class PermissionListView(generics.ListAPIView):
     queryset = Permission.objects.all()
     serializer_class = ListAllPermissionSerializer
@@ -247,6 +306,27 @@ class AddCamera(APIView):
             {"errors": serializer.errors, "message": "Failed to add camera. Please check the input data."}, 
             status=status.HTTP_400_BAD_REQUEST
         )
+
+class DeleteCamera(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, camera_id):
+        # Check if camera_id is valid
+        if not isinstance(camera_id, int):
+            return Response({"error": "Invalid camera ID format."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            camera = Camera.objects.get(id=camera_id)
+            camera.delete()
+            return Response({
+                "message": "Camera deleted successfully.",
+            }, status=status.HTTP_200_OK)
+        except Camera.DoesNotExist:
+            return Response({"error": "Camera not found."}, status=status.HTTP_404_NOT_FOUND)
+        except IntegrityError:
+            return Response({"error": "Camera cannot be deleted because it is referenced by other records."}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": f"An unexpected error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class CameraListView(generics.ListAPIView):
     queryset = Camera.objects.all()

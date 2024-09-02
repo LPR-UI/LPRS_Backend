@@ -143,14 +143,13 @@ class ListAllPermissionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Permission
-        fields = ['license_plate', 'start_date', 'end_date', 'isAllowed', 'level']
+        fields = ['license_plate', 'start_date', 'end_date', 'is_allowed', 'level']
 
     def get_start_date(self, obj):
-        return jdatetime.datetime.fromgregorian(date=obj.startDate).strftime('%Y-%m-%d %H:%M:%S')
+        return jdatetime.datetime.fromgregorian(date=obj.start_date).strftime('%Y-%m-%d %H:%M:%S')
 
     def get_end_date(self, obj):
-        return jdatetime.datetime.fromgregorian(date=obj.endDate).strftime('%Y-%m-%d %H:%M:%S')
-
+        return jdatetime.datetime.fromgregorian(date=obj.end_date).strftime('%Y-%m-%d %H:%M:%S')
 
 class ListAllCameraSerializer(serializers.ModelSerializer):
 
