@@ -2,14 +2,16 @@ import io
 from django.http import HttpResponse
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
-from .serializers import CarOwnerSerializer
+from .serializers import CarOwnerSerializer, ListAllCarOwnerSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from .models import CarOwner, Car, Permission, Camera, CarEntry
 from django.utils import timezone
+from rest_framework import generics
 from io import BytesIO
+import jdatetime
 
 
 # AUTH
@@ -28,7 +30,8 @@ class Statistics(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        today = timezone.now().date()
+        today = timezone.localtime(timezone.now())
+        #today = timezone.now().date()
 
         # Statistics
         start_of_today = timezone.make_aware(timezone.datetime.combine(today, timezone.datetime.min.time()))
@@ -39,7 +42,7 @@ class Statistics(APIView):
         allowed_permissions = Permission.objects.filter(isAllowed=True, endDate__gte=start_of_today).count()
         not_allowed_permissions = Permission.objects.filter(isAllowed=False).count()
         total_cameras = Camera.objects.count()
-        today_entries = CarEntry.objects.filter(timestamp__date=today).count()
+        today_entries = CarEntry.objects.filter(timestamp__gte=start_of_today, timestamp__lt=end_of_today).count()
         total_entries = CarEntry.objects.count()
 
         # Fetch 10 most recent entries
@@ -51,7 +54,7 @@ class Statistics(APIView):
                 "license_plate": entry.license_plate.license_plate,
                 "camera_location": entry.camera.location,
                 "is_entry_camera": entry.camera.is_entry_camera,
-                "timestamp": entry.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+                "timestamp": jdatetime.datetime.fromgregorian(datetime=timezone.localtime(entry.timestamp)).strftime('%Y-%m-%d %H:%M:%S')
             }
             for entry in recent_entries
         ]
@@ -60,13 +63,13 @@ class Statistics(APIView):
         data = {
             "Statistics":
             {
-                "total_owners": total_owners,
-                "total_cars": total_cars,
-                "allowed_permissions": allowed_permissions,
-                "not_allowed_permissions": not_allowed_permissions,
-                "total_cameras": total_cameras,
-                "today_entries": today_entries,
-                "total_entries": total_entries,
+                "تعداد مالکان": total_owners,
+                "تعداد ماشین‌ها": total_cars,
+                "تعداد مجوزهای فعال": allowed_permissions,
+                "تعداد مجوزهای منقضی شده": not_allowed_permissions,
+                "تعداد دوربین‌ها": total_cameras,
+                "تعداد ورودی‌/خروجی‌های امروز": today_entries,
+                "تعداد کل ورودی/خروجی‌ها": total_entries,
             },
             "recent_entries": recent_entries_data
         }
@@ -105,14 +108,14 @@ class GenerateReport(APIView):
         p.setFont("Helvetica-Bold", 16)
         p.drawString(100, height - 100, f"Report for License Plate: {license_plate}")
         p.setFont("Helvetica", 12)
-        p.drawString(100, height - 120, f"Generated on: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        p.drawString(100, height - 120, f"Generated on: {jdatetime.datetime.fromgregorian(datetime=timezone.now()).strftime('%Y-%m-%d %H:%M:%S')}")
 
         # Draw owner information
         p.drawString(100, height - 150, "Owner Information:")
         p.drawString(120, height - 170, f"Name: {owner.firstName} {owner.lastName}")
         p.drawString(120, height - 190, f"National Code: {owner.nationalCode}")
         p.drawString(120, height - 210, f"Phone Number: {owner.phoneNumber}")
-        p.drawString(120, height - 230, f"Date of Birth: {owner.dateOfBirth.strftime('%Y-%m-%d')}")
+        p.drawString(120, height - 230, f"Date of Birth: {jdatetime.datetime.fromgregorian(date=owner.dateOfBirth).strftime('%Y-%m-%d')}")
         p.drawString(120, height - 250, f"Career: {owner.career}")
 
         # Draw car information
@@ -124,7 +127,7 @@ class GenerateReport(APIView):
         p.drawString(100, height - 350, "Last 10 Entries:")
         y_position = height - 370
         for entry in last_10_entries:
-            p.drawString(120, y_position, f"{entry.timestamp.strftime('%Y-%m-%d %H:%M:%S')} - Camera: {entry.camera.location} - Is Entry Camera: {entry.is_entry_camera}")
+            p.drawString(120, y_position, f"{jdatetime.datetime.fromgregorian(datetime=timezone.localtime(entry.timestamp)).strftime('%Y-%m-%d %H:%M:%S')} - Camera: {entry.camera.location} - Is Entry Camera: {entry.camera.is_entry_camera}")
             y_position -= 20
 
         # Draw permission details
@@ -132,8 +135,8 @@ class GenerateReport(APIView):
         y_position -= 40
         for permission in permissions:
             status = "Allowed" if permission.isAllowed else "Not Allowed"
-            p.drawString(120, y_position, f"From: {permission.startDate.strftime('%Y-%m-%d %H:%M:%S')} "
-                                          f"To: {permission.endDate.strftime('%Y-%m-%d %H:%M:%S')} "
+            p.drawString(120, y_position, f"From: {jdatetime.datetime.fromgregorian(datetime=timezone.localtime(permission.startDate)).strftime('%Y-%m-%d %H:%M:%S')} "
+                                          f"To: {jdatetime.datetime.fromgregorian(datetime=timezone.localtime(permission.endDate)).strftime('%Y-%m-%d %H:%M:%S')} "
                                           f"- Status: {status}")
             y_position -= 20
 
@@ -167,3 +170,16 @@ class AddOwner(APIView):
             {"errors": serializer.errors, "message": "Failed to add car owner. Please check the input data."}, 
             status=status.HTTP_400_BAD_REQUEST
         )
+
+class CarOwnerListView(generics.ListAPIView):
+    queryset = CarOwner.objects.all()
+    serializer_class = ListAllCarOwnerSerializer
+    permission_classes = [IsAuthenticated]
+
+
+
+# Cars
+class CarListView(generics.ListAPIView):
+    queryset = Car.objects.all()
+    serializer_class = ListAllCarOwnerSerializer
+    permission_classes = [IsAuthenticated]

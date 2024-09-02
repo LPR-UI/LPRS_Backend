@@ -11,5 +11,8 @@ urlpatterns = [
     path('validate-access/', views.ValidateAccessView.as_view(), name="validate_access"),
     path('statistics/', views.Statistics.as_view(), name="Statistics"),
     path('report/', views.GenerateReport.as_view(), name="report"),
-    path('add-owner/', views.AddOwner.as_view(), name="add_owner")
+    path('add-owner/', views.AddOwner.as_view(), name="add_owner"),
+    path('owners/', views.CarOwnerListView.as_view(), name='car_owner_list'),
+    path('cars/', views.CarListView.as_view(), name='car_owner_list'),
+
 ]
