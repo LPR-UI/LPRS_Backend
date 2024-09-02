@@ -9,7 +9,9 @@ from .serializers import (  CarOwnerSerializer,
                             ListAllCarOwnerSerializer,
                             ListAllCarSerializer,
                             ListAllPermissionSerializer,
-                            ListAllCameraSerializer)
+                            ListAllCameraSerializer,
+                            GetOwnersInCarCreationSerializer,
+                            GetLPsInPermissionCreationSerializer)
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -204,8 +206,6 @@ class CarOwnerListView(generics.ListAPIView):
     serializer_class = ListAllCarOwnerSerializer
     permission_classes = [IsAuthenticated]
 
-
-
 # Cars
 class AddCar(APIView):
     permission_classes = [IsAuthenticated]
@@ -222,6 +222,11 @@ class AddCar(APIView):
             {"errors": serializer.errors, "message": "Failed to add car. Please check the input data."}, 
             status=status.HTTP_400_BAD_REQUEST
         )
+
+class GetOwnersInCarCreation(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    queryset = CarOwner.objects.all()
+    serializer_class = GetOwnersInCarCreationSerializer
 
 class DeleteCar(APIView):
     permission_classes = [IsAuthenticated]
@@ -262,6 +267,11 @@ class AddPermission(APIView):
             status=status.HTTP_400_BAD_REQUEST
         )
 
+class GetLPsInPermissionCreation(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    queryset = Permission.objects.all()
+    serializer_class = GetLPsInPermissionCreationSerializer
+
 class DeletePermission(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -283,12 +293,10 @@ class DeletePermission(APIView):
         except Exception as e:
             return Response({"error": f"An unexpected error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
 class PermissionListView(generics.ListAPIView):
     queryset = Permission.objects.all()
     serializer_class = ListAllPermissionSerializer
     permission_classes = [IsAuthenticated]
-
 
 # Camera
 class AddCamera(APIView):

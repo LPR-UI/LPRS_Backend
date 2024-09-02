@@ -1,8 +1,10 @@
 import re
 from rest_framework import serializers
-from django.core.validators import RegexValidator, MinValueValidator, MaxValueValidator
+from django.core.validators import RegexValidator
 from .models import CarOwner, Car, Permission, Camera
 import jdatetime
+from django.utils import timezone
+from datetime import datetime
 
 
 # ADD
@@ -39,10 +41,25 @@ class CarOwnerSerializer(serializers.ModelSerializer):
             RegexValidator(regex=r'^[a-zA-Z]+$', message='Career must contain only letters.')
         ]
     )
+    dateOfBirth = serializers.CharField()
 
     class Meta:
         model = CarOwner
         fields = '__all__'
+
+    def validate(self, data):
+        # Convert Jalali date to Gregorian date
+        date_str = data.get('dateOfBirth')
+        if date_str:
+            try:
+                jalali_date = jdatetime.datetime.strptime(date_str, '%Y-%m-%d')
+                gregorian_date = jalali_date.togregorian().date()
+                data['dateOfBirth'] = timezone.make_aware(datetime.combine(gregorian_date, datetime.min.time()), timezone.get_current_timezone())
+            except ValueError:
+                raise serializers.ValidationError({'dateOfBirth': "Invalid Jalali date format. Use YYYY-MM-DD."})
+  
+        return data
+
 
 class CarSerializer(serializers.ModelSerializer):
     owner = serializers.PrimaryKeyRelatedField(queryset=CarOwner.objects.all())
@@ -70,10 +87,21 @@ class CarSerializer(serializers.ModelSerializer):
         model = Car
         fields = ['owner', 'model', 'license_plate', 'color']
 
+class GetOwnersInCarCreationSerializer(serializers.ModelSerializer):
+    value = serializers.IntegerField(source='id')
+    name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CarOwner
+        fields = ['value', 'name']
+
+    def get_name(self, obj):
+        return f"{obj.firstName} {obj.lastName} ({obj.id})"
+
 class PermissionSerializer(serializers.ModelSerializer):
     license_plate = serializers.CharField(max_length=15)
-    start_date = serializers.DateField()
-    end_date = serializers.DateField()
+    start_date = serializers.CharField()
+    end_date = serializers.CharField()
     level = serializers.IntegerField(min_value=1, max_value=3)
     is_allowed = serializers.BooleanField()
 
@@ -87,8 +115,21 @@ class PermissionSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, data):
+        # Convert Jalali date to Gregorian date
+        for date_field in ['start_date', 'end_date']:
+            date_str = data.get(date_field)
+            if date_str:
+                try:
+                    jalali_date = jdatetime.datetime.strptime(date_str, '%Y-%m-%d')
+                    gregorian_date = jalali_date.togregorian().date()
+                    data[date_field] = timezone.make_aware(datetime.combine(gregorian_date, datetime.min.time()), timezone.get_current_timezone())
+                except ValueError:
+                    raise serializers.ValidationError({date_field: "Invalid Jalali date format. Use YYYY-MM-DD."})
+
+        # Check that end_date is after start_date
         if data['end_date'] < data['start_date']:
             raise serializers.ValidationError("End date must be after the start date.")
+        
         return data
 
     def create(self, validated_data):
@@ -100,6 +141,13 @@ class PermissionSerializer(serializers.ModelSerializer):
         
         permission = Permission.objects.create(license_plate=car, **validated_data)
         return permission
+
+class GetLPsInPermissionCreationSerializer(serializers.ModelSerializer):
+    value = serializers.IntegerField(source='license_plate')
+
+    class Meta:
+        model = CarOwner
+        fields = ['value']
 
 class CameraSerializer(serializers.ModelSerializer):
     

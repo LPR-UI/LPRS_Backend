@@ -13,6 +13,9 @@ class Car(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        return self.license_plate
+
 class CarOwner(models.Model):
     firstName = models.CharField(max_length=50)
     lastName = models.CharField(max_length=50)
@@ -22,7 +25,7 @@ class CarOwner(models.Model):
     career = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
+    
 class Camera(models.Model):
     class CameraLevel(models.IntegerChoices):
         FULL_ACCESS = 1, "Full Access"

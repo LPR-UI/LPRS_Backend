@@ -18,6 +18,9 @@ urlpatterns = [
     path('add-permission/', views.AddPermission.as_view(), name="add_permission"),
     path('add-camera/', views.AddCamera.as_view(), name="add_camera"),
 
+    # partial GETs
+    path('owners-dropdown/', views.GetOwnersInCarCreation.as_view(), name="get_dropdown_owner"),
+    path('permissions-dropdown/', views.GetLPsInPermissionCreation.as_view(), name="get_dropdown_permission"),
 
     # DELETE
     path('delete-owner/<int:owner_id>/', views.DeleteOwner.as_view(), name="delete_owner"),
