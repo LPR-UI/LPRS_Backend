@@ -2,7 +2,14 @@ import io
 from django.http import HttpResponse
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
-from .serializers import CarOwnerSerializer, ListAllCarOwnerSerializer
+from .serializers import (  CarOwnerSerializer,
+                            CarSerializer,
+                            PermissionSerializer,
+                            CameraSerializer,
+                            ListAllCarOwnerSerializer,
+                            ListAllCarSerializer,
+                            ListAllPermissionSerializer,
+                            ListAllCameraSerializer)
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -179,7 +186,69 @@ class CarOwnerListView(generics.ListAPIView):
 
 
 # Cars
+class AddCar(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = CarSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"message": "Car added successfully."}, 
+                status=status.HTTP_201_CREATED
+            )
+        return Response(
+            {"errors": serializer.errors, "message": "Failed to add car. Please check the input data."}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
 class CarListView(generics.ListAPIView):
     queryset = Car.objects.all()
-    serializer_class = ListAllCarOwnerSerializer
+    serializer_class = ListAllCarSerializer
+    permission_classes = [IsAuthenticated]
+
+
+# Permissions
+class AddPermission(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = PermissionSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"message": "Permission added successfully."}, 
+                status=status.HTTP_201_CREATED
+            )
+        return Response(
+            {"errors": serializer.errors, "message": "Failed to add permission. Please check the input data."}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+class PermissionListView(generics.ListAPIView):
+    queryset = Permission.objects.all()
+    serializer_class = ListAllPermissionSerializer
+    permission_classes = [IsAuthenticated]
+
+
+# Camera
+class AddCamera(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = CameraSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"message": "Camera added successfully."}, 
+                status=status.HTTP_201_CREATED
+            )
+        return Response(
+            {"errors": serializer.errors, "message": "Failed to add camera. Please check the input data."}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+class CameraListView(generics.ListAPIView):
+    queryset = Camera.objects.all()
+    serializer_class = ListAllCameraSerializer
     permission_classes = [IsAuthenticated]
