@@ -14,13 +14,13 @@ class CarOwnerSerializer(serializers.ModelSerializer):
     firstName = serializers.CharField(
         max_length=50, 
         validators=[
-            RegexValidator(regex=r'^[a-zA-Z]+$', message='First name must contain only letters.')
+            RegexValidator(regex=r'^[a-zA-Z\u0600-\u06FF\s]+$', message='First name must contain only letters (English or Persian).')
         ]
     )
     lastName = serializers.CharField(
         max_length=50, 
         validators=[
-            RegexValidator(regex=r'^[a-zA-Z]+$', message='Last name must contain only letters.')
+            RegexValidator(regex=r'^[a-zA-Z\u0600-\u06FF\s]+$', message='Last name must contain only letters (English or Persian).')
         ]
     )
     nationalCode = serializers.CharField(
@@ -38,7 +38,7 @@ class CarOwnerSerializer(serializers.ModelSerializer):
     career = serializers.CharField(
         max_length=50, 
         validators=[
-            RegexValidator(regex=r'^[a-zA-Z]+$', message='Career must contain only letters.')
+            RegexValidator(regex=r'^[a-zA-Z\u0600-\u06FF\s]+$', message='Career must contain only letters (English or Persian).')
         ]
     )
     dateOfBirth = serializers.CharField()
@@ -60,7 +60,6 @@ class CarOwnerSerializer(serializers.ModelSerializer):
   
         return data
 
-
 class CarSerializer(serializers.ModelSerializer):
     owner = serializers.PrimaryKeyRelatedField(queryset=CarOwner.objects.all())
     model = serializers.CharField(max_length=50)
@@ -77,8 +76,8 @@ class CarSerializer(serializers.ModelSerializer):
         max_length=30,
         validators=[
             RegexValidator(
-                regex=r'^[a-zA-Z]+$',
-                message='Color must contain only letters.'
+                regex=r'^[a-zA-Z\u0600-\u06FF\s]+$',
+                message='Color must contain only letters (English or Persian).'
             )
         ]
     )
@@ -127,7 +126,9 @@ class PermissionSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError({date_field: "Invalid Jalali date format. Use YYYY-MM-DD."})
 
         # Check that end_date is after start_date
-        if data['end_date'] < data['start_date']:
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
+        if start_date and end_date and end_date < start_date:
             raise serializers.ValidationError("End date must be after the start date.")
         
         return data
@@ -158,17 +159,14 @@ class CameraSerializer(serializers.ModelSerializer):
 
 # LISTS
 class ListAllCarOwnerSerializer(serializers.ModelSerializer):
-    full_name = serializers.SerializerMethodField()
-    birthdate = serializers.SerializerMethodField()
+    dateOfBirth = serializers.SerializerMethodField()
 
     class Meta:
         model = CarOwner
-        fields = ['id', 'full_name', 'nationalCode', 'phoneNumber', 'birthdate', 'career']
+        fields = ['id', 'firstName', 'lastName', 'nationalCode', 'phoneNumber', 'dateOfBirth', 'career']
 
-    def get_full_name(self, obj):
-        return f"{obj.firstName} {obj.lastName}"
     
-    def get_birthdate(self, obj):
+    def get_dateOfBirth(self, obj):
         return jdatetime.datetime.fromgregorian(date=obj.dateOfBirth).strftime('%Y-%m-%d')    
 
 class ListAllCarSerializer(serializers.ModelSerializer):
@@ -191,7 +189,7 @@ class ListAllPermissionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Permission
-        fields = ['license_plate', 'start_date', 'end_date', 'is_allowed', 'level']
+        fields = ['id','license_plate', 'start_date', 'end_date', 'is_allowed', 'level']
 
     def get_start_date(self, obj):
         return jdatetime.datetime.fromgregorian(date=obj.start_date).strftime('%Y-%m-%d %H:%M:%S')
@@ -203,4 +201,4 @@ class ListAllCameraSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Camera
-        fields = ['location', 'description', 'is_entry_camera', 'level']
+        fields = ['id','location', 'description', 'is_entry_camera', 'level']

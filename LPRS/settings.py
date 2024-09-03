@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,7 +27,7 @@ SECRET_KEY = 'sadfuioer34hbgaASsa@@@@@@@dASAASGSGASGgasdgFGPPLNasdffasdfdasgrewA
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["37.152.182.19", "127.0.0.1"]
+ALLOWED_HOSTS = ["37.152.182.19", "127.0.0.1", "localhost"]
 
 
 # Application definition
@@ -151,3 +152,6 @@ SIMPLE_JWT = {
 
 
 CORS_ORIGIN_ALLOW_ALL = True   
+
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'static/')

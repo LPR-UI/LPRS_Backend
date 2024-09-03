@@ -24,9 +24,15 @@ urlpatterns = [
 
     # DELETE
     path('delete-owner/<int:owner_id>/', views.DeleteOwner.as_view(), name="delete_owner"),
-    path('delete-car/<str:license_plate>/', views.DeleteCar.as_view(), name="delete_owner"),
-    path('delete-permission/<int:permission_id>/', views.DeletePermission.as_view(), name="delete_owner"),
-    path('delete-camera/<int:camera_id>/', views.DeleteCamera.as_view(), name="delete_owner"),
+    path('delete-car/<str:license_plate>/', views.DeleteCar.as_view(), name="delete_car"),
+    path('delete-permission/<int:permission_id>/', views.DeletePermission.as_view(), name="delete_permission"),
+    path('delete-camera/<int:camera_id>/', views.DeleteCamera.as_view(), name="delete_camera"),
+
+    # EDIT
+    path('edit-owner/<int:owner_id>/', views.EditOwner.as_view(), name='edit-owner'),
+    path('edit-car/<str:license_plate>/', views.EditCar.as_view(), name='edit-car'),
+    path('edit-permission/<int:permission_id>/', views.EditPermission.as_view(), name='edit-permission'),
+    path('edit-camera/<int:camera_id>/', views.EditCamera.as_view(), name='edit-camera'),
 
 
     # LISTS

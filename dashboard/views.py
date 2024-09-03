@@ -201,6 +201,21 @@ class DeleteOwner(APIView):
         except Exception as e:
             return Response({"error": f"An unexpected error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+class EditOwner(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, owner_id):
+        try:
+            owner = CarOwner.objects.get(id=owner_id)
+        except CarOwner.DoesNotExist:
+            return Response({"error": "Owner not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = CarOwnerSerializer(owner, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Owner updated successfully."}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 class CarOwnerListView(generics.ListAPIView):
     queryset = CarOwner.objects.all()
     serializer_class = ListAllCarOwnerSerializer
@@ -243,6 +258,22 @@ class DeleteCar(APIView):
             return Response({"error": "Car cannot be deleted because it is referenced by other records."}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error": f"An unexpected error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class EditCar(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, license_plate):
+        try:
+            car = Car.objects.get(license_plate=license_plate)
+        except Car.DoesNotExist:
+            return Response({"error": "Car not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = CarSerializer(car, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Car updated successfully."}, status=status.HTTP_200_OK)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class CarListView(generics.ListAPIView):
     queryset = Car.objects.all()
@@ -293,6 +324,22 @@ class DeletePermission(APIView):
         except Exception as e:
             return Response({"error": f"An unexpected error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+class EditPermission(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, permission_id):
+        try:
+            permission = Permission.objects.get(id=permission_id)
+        except Permission.DoesNotExist:
+            return Response({"error": "Permission not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = PermissionSerializer(permission, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Permission updated successfully.", "permission": serializer.data}, status=status.HTTP_200_OK)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 class PermissionListView(generics.ListAPIView):
     queryset = Permission.objects.all()
     serializer_class = ListAllPermissionSerializer
@@ -335,6 +382,22 @@ class DeleteCamera(APIView):
             return Response({"error": "Camera cannot be deleted because it is referenced by other records."}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error": f"An unexpected error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class EditCamera(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, camera_id):
+        try:
+            camera = Camera.objects.get(id=camera_id)
+        except Camera.DoesNotExist:
+            return Response({"error": "Camera not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = CameraSerializer(camera, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Camera updated successfully.", "camera": serializer.data}, status=status.HTTP_200_OK)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class CameraListView(generics.ListAPIView):
     queryset = Camera.objects.all()
