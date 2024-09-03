@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'sadfuioer34hbgaASsa@@@@@@@dASAASGSGASGgasdgFGPPLNasdffasdfdasgrewASdgsadgI@'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["37.152.182.19", "127.0.0.1", "localhost"]
 
@@ -155,3 +155,48 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,  # Keep existing loggers active
+    'formatters': {
+        'simple': {
+            'format': '%(levelname)s: %(message)s'  # Simple, readable format
+        },
+        'detailed': {
+            'format': '%(asctime)s %(levelname)s [%(name)s:%(lineno)s] %(message)s'
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'formatter': 'detailed',  # Detailed logs for files
+            'filename': '/home/debian/Django_Logs/django.log',
+            'maxBytes': 1024 * 1024 * 100,  # 100 MB
+            'backupCount': 10,
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'django.request': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',  
+            'propagate': False,
+        },
+        'django.security': {
+            'handlers': ['console', 'file'],
+            'level': 'ERROR',  # Capture security-related errors
+            'propagate': False,
+        },
+    }
+}

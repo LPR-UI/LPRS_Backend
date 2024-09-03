@@ -300,7 +300,7 @@ class AddPermission(APIView):
 
 class GetLPsInPermissionCreation(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
-    queryset = Permission.objects.all()
+    queryset = Car.objects.all()
     serializer_class = GetLPsInPermissionCreationSerializer
 
 class DeletePermission(APIView):
@@ -334,9 +334,13 @@ class EditPermission(APIView):
             return Response({"error": "Permission not found."}, status=status.HTTP_404_NOT_FOUND)
 
         serializer = PermissionSerializer(permission, data=request.data, partial=True)
+        
         if serializer.is_valid():
             serializer.save()
-            return Response({"message": "Permission updated successfully.", "permission": serializer.data}, status=status.HTTP_200_OK)
+            return Response(
+                {"message": "Permission updated successfully.", "permission": serializer.data}, 
+                status=status.HTTP_200_OK
+            )
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

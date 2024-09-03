@@ -143,11 +143,41 @@ class PermissionSerializer(serializers.ModelSerializer):
         permission = Permission.objects.create(license_plate=car, **validated_data)
         return permission
 
+    def create(self, validated_data):
+        # Handle creation logic including resolving the license plate to a Car instance
+        license_plate = validated_data.pop('license_plate')
+        try:
+            car = Car.objects.get(license_plate=license_plate)
+        except Car.DoesNotExist:
+            raise serializers.ValidationError(f"Car with license plate {license_plate} does not exist.")
+        
+        permission = Permission.objects.create(license_plate=car, **validated_data)
+        return permission
+
+    def update(self, instance, validated_data):
+        # Handle update logic including resolving the license plate to a Car instance
+        license_plate = validated_data.pop('license_plate', None)
+        if license_plate:
+            try:
+                car = Car.objects.get(license_plate=license_plate)
+            except Car.DoesNotExist:
+                raise serializers.ValidationError(f"Car with license plate {license_plate} does not exist.")
+            instance.license_plate = car
+
+        # Update other fields
+        instance.start_date = validated_data.get('start_date', instance.start_date)
+        instance.end_date = validated_data.get('end_date', instance.end_date)
+        instance.level = validated_data.get('level', instance.level)
+        instance.is_allowed = validated_data.get('is_allowed', instance.is_allowed)
+
+        instance.save()
+        return instance
+    
 class GetLPsInPermissionCreationSerializer(serializers.ModelSerializer):
-    value = serializers.IntegerField(source='license_plate')
+    value = serializers.CharField(source='license_plate')
 
     class Meta:
-        model = CarOwner
+        model = Car
         fields = ['value']
 
 class CameraSerializer(serializers.ModelSerializer):
@@ -192,10 +222,10 @@ class ListAllPermissionSerializer(serializers.ModelSerializer):
         fields = ['id','license_plate', 'start_date', 'end_date', 'is_allowed', 'level']
 
     def get_start_date(self, obj):
-        return jdatetime.datetime.fromgregorian(date=obj.start_date).strftime('%Y-%m-%d %H:%M:%S')
+        return jdatetime.datetime.fromgregorian(date=obj.start_date).strftime('%Y-%m-%d')
 
     def get_end_date(self, obj):
-        return jdatetime.datetime.fromgregorian(date=obj.end_date).strftime('%Y-%m-%d %H:%M:%S')
+        return jdatetime.datetime.fromgregorian(date=obj.end_date).strftime('%Y-%m-%d')
 
 class ListAllCameraSerializer(serializers.ModelSerializer):
 

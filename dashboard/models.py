@@ -47,8 +47,8 @@ class Permission(models.Model):
         GUEST = 3, "Guest"
 
     license_plate = models.ForeignKey('Car', on_delete=models.CASCADE)
-    start_date = models.DateTimeField()
-    end_date = models.DateTimeField()
+    start_date = models.DateField()
+    end_date = models.DateField()
     is_allowed = models.BooleanField(default=True)
     level = models.IntegerField(choices=PermissionLevel.choices,
                                 default=PermissionLevel.GUEST)
